@@ -49,7 +49,13 @@ const photos = [
     { file: "WhatsApp Image 2026-06-18 at 3.28.12 PM (2).jpeg", caption: "contigo" },
     { file: "WhatsApp Image 2026-06-18 at 3.28.13 PM.jpeg", caption: "mi favorita" },
     { file: "WhatsApp Image 2026-06-18 at 3.28.14 PM.jpeg", caption: "siempre tú" },
-    { file: "WhatsApp Image 2026-06-18 at 3.30.10 PM.jpeg", caption: "por siempre" }
+    { file: "WhatsApp Image 2026-06-18 at 3.30.10 PM.jpeg", caption: "nuestro mundo" },
+    { file: "WhatsApp Image 2026-06-18 at 4.09.37 PM.jpeg", caption: "tú y yo" },
+    { file: "WhatsApp Image 2026-06-18 at 4.09.37 PM (1).jpeg", caption: "mi cielo" },
+    { file: "WhatsApp Image 2026-06-18 at 4.09.38 PM.jpeg", caption: "felicidad" },
+    { file: "WhatsApp Image 2026-06-18 at 4.09.38 PM (1).jpeg", caption: "mi todo" },
+    { file: "WhatsApp Image 2026-06-18 at 4.09.38 PM (2).jpeg", caption: "juntos" },
+    { file: "WhatsApp Image 2026-06-18 at 4.09.39 PM.jpeg", caption: "por siempre" }
 ];
 
 // ============================================================
@@ -355,8 +361,11 @@ createMemoryStars();
 const photoLabels = [];
 function createPhotoFrames() {
     photos.forEach((photo, i) => {
-        const radius = 110 + Math.random() * 50;
+        // Anillos alternos (cerca/lejos) y alturas escalonadas para evitar amontonamiento
+        const ring = i % 2;
+        const radius = (ring === 0 ? 105 : 150) + Math.random() * 25;
         const angle = ((i + 0.5) / photos.length) * Math.PI * 2;
+        const height = (ring === 0 ? 50 : -10) + (Math.random() - 0.5) * 40;
 
         const frameDiv = document.createElement('div');
         frameDiv.className = 'photo-frame';
@@ -370,7 +379,7 @@ function createPhotoFrames() {
         frameDiv.appendChild(cap);
 
         const photoLabel = new CSS2DObject(frameDiv);
-        photoLabel.position.set(Math.cos(angle) * radius, 35 + (Math.random() - 0.5) * 30, Math.sin(angle) * radius);
+        photoLabel.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
         photoLabel.userData.el = frameDiv;
         scene.add(photoLabel);
         photoLabels.push(photoLabel);

@@ -18,6 +18,8 @@ html, body {
     overflow: hidden;
     height: 100%;
     width: 100%;
+    overscroll-behavior: none;
+    position: fixed;
 }
 
 #experience-container {
@@ -33,6 +35,9 @@ html, body {
     top: 0;
     left: 0;
     z-index: 1;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 /* Viñeta cinematográfica */
@@ -312,6 +317,8 @@ html, body {
     position: relative;
     z-index: 1;
     width: min(90vw, 420px);
+    max-height: 90dvh;
+    overflow-y: auto;
     background: linear-gradient(160deg, rgba(40, 18, 56, 0.95), rgba(20, 8, 30, 0.97));
     border: 1px solid rgba(255, 179, 217, 0.3);
     border-radius: 22px;
@@ -398,6 +405,21 @@ html, body {
     .instructions p { font-size: 0.68rem; }
     .modal-card { padding: 1rem; border-radius: 18px; }
     .modal-photo img { max-height: 42vh; }
+    .intro-heart { font-size: 3rem; }
+    .intro-sub { font-size: 1.15rem; margin: 1rem 0 1.8rem; }
+    #enter-btn { padding: 0.85rem 2rem; font-size: 0.78rem; }
+}
+
+/* Móvil en horizontal (poca altura): compactar la interfaz */
+@media (max-height: 500px) and (orientation: landscape) {
+    .header h1 { font-size: 2.2rem; }
+    .header p { font-size: 0.85rem; margin-top: 0; }
+    .ui-overlay { padding: 1rem 1.4rem; }
+    .instructions { padding: 0.5rem 1.1rem; }
+    .modal-card { max-height: 94dvh; padding: 0.9rem; }
+    .modal-photo img { max-height: 50dvh; }
+    #modal-text { font-size: 1.05rem; margin-top: 0.7rem; }
+    #music-toggle { top: 1rem; right: 1rem; width: 42px; height: 42px; }
 }
 
 /* Pantallas que no soportan blur: fondo sólido para que se lea */
