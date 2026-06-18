@@ -218,6 +218,39 @@ function createGalaxy() {
 }
 const galaxy = createGalaxy();
 
+// ---- Anillos orbitando la galaxia (estilo Saturno) ----
+function createGalaxyRings() {
+    const defs = [
+        { radius: 150, thickness: 6, count: 2400, color: '#ffc8e0', opacity: 0.55 },
+        { radius: 172, thickness: 5, count: 2800, color: '#9fb0ff', opacity: 0.5 },
+        { radius: 196, thickness: 7, count: 3200, color: '#cdbcff', opacity: 0.45 }
+    ];
+    const group = new THREE.Group();
+    defs.forEach((def) => {
+        const count = Math.round(def.count * QUALITY);
+        const positions = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const r = def.radius + (Math.random() - 0.5) * def.thickness;
+            positions[i * 3] = Math.cos(a) * r;
+            positions[i * 3 + 1] = (Math.random() - 0.5) * 1.5;
+            positions[i * 3 + 2] = Math.sin(a) * r;
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const mat = new THREE.PointsMaterial({
+            size: 0.5, color: new THREE.Color(def.color), sizeAttenuation: true,
+            transparent: true, opacity: def.opacity, depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+        group.add(new THREE.Points(geo, mat));
+    });
+    group.rotation.x = 0.12; // leve inclinación para que se aprecien
+    scene.add(group);
+    return group;
+}
+const galaxyRings = createGalaxyRings();
+
 // ============================================================
 // 5. Corazón de partículas pulsante en el centro
 // ============================================================
@@ -297,7 +330,7 @@ function create3DStars() {
     });
 
     phrases.forEach((text, i) => {
-        const radius = 45 + Math.random() * 75;
+        const radius = 45 + Math.random() * 130;
         const angle = (i / phrases.length) * Math.PI * 2;
         const group = new THREE.Group();
 
@@ -312,7 +345,7 @@ function create3DStars() {
         label.position.set(0, 5, 0);
         group.add(label);
 
-        group.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 30, Math.sin(angle) * radius);
+        group.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 55, Math.sin(angle) * radius);
         group.userData.phase = Math.random() * Math.PI * 2;
         group.userData.labelEl = div;
         scene.add(group);
@@ -331,7 +364,7 @@ function createMemoryStars() {
     });
 
     memories.forEach((memory, i) => {
-        const radius = 55 + Math.random() * 60;
+        const radius = 60 + Math.random() * 110;
         const angle = ((i + 0.25) / memories.length) * Math.PI * 2;
         const group = new THREE.Group();
 
@@ -354,7 +387,7 @@ function createMemoryStars() {
         label.position.set(0, 7, 0);
         group.add(label);
 
-        group.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 35, Math.sin(angle) * radius);
+        group.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 60, Math.sin(angle) * radius);
         group.userData.phase = Math.random() * Math.PI * 2;
         group.userData.isMemory = true;
         group.userData.labelEl = div;
@@ -372,9 +405,9 @@ function createPhotoFrames() {
     photos.forEach((photo, i) => {
         // Anillos alternos (cerca/lejos) y alturas escalonadas para evitar amontonamiento
         const ring = i % 2;
-        const radius = (ring === 0 ? 105 : 150) + Math.random() * 25;
+        const radius = (ring === 0 ? 95 : 185) + Math.random() * 30;
         const angle = ((i + 0.5) / photos.length) * Math.PI * 2;
-        const height = (ring === 0 ? 50 : -10) + (Math.random() - 0.5) * 40;
+        const height = (ring === 0 ? 60 : -25) + (Math.random() - 0.5) * 45;
 
         const frameDiv = document.createElement('div');
         frameDiv.className = 'photo-frame';
@@ -573,11 +606,15 @@ function animate() {
 
     galaxy.rotation.y = time * 0.04;
     starfield.rotation.y = time * 0.005;
+    galaxyRings.rotation.y = -time * 0.025;
+    galaxyRings.children.forEach((ring, i) => { ring.rotation.y = time * (0.02 + i * 0.012); });
 
     // Latido del corazón
     const beat = 1 + Math.sin(time * 2.2) * 0.06 + Math.sin(time * 4.4) * 0.02;
     heart.scale.set(beat, beat, beat);
-    heart.rotation.y = Math.sin(time * 0.3) * 0.25;
+    // Siempre de frente a la cámara (billboard), con un leve balanceo
+    heart.quaternion.copy(camera.quaternion);
+    heart.rotateZ(Math.sin(time * 0.5) * 0.08);
 
     phraseStars.forEach((star, i) => {
         star.rotation.y = time * 0.5;
@@ -626,9 +663,50 @@ function animate() {
     controls.target.y += (-mouse.y * 8 - controls.target.y) * 0.02;
 
     controls.update();
+
+    // Oclusión: ocultar etiquetas que queden detrás del corazón
+    updateHeartOcclusion();
+
     composer.render();
     labelRenderer.render(scene, camera);
 }
+
+// ---- Oclusión por el corazón ----
+const HEART_CENTER = new THREE.Vector3(0, 4, 0);
+const HEART_RADIUS = 24;
+const _v = new THREE.Vector3();
+const _hcNdc = new THREE.Vector3();
+const _edgeNdc = new THREE.Vector3();
+const _right = new THREE.Vector3();
+
+function applyOcclusion(el, worldPos) {
+    if (!el) return;
+    const lpDist = camera.position.distanceTo(worldPos);
+    const hcDist = camera.position.distanceTo(HEART_CENTER);
+    _v.copy(worldPos).project(camera);
+    const dx = _v.x - _hcNdc.x;
+    const dy = _v.y - _hcNdc.y;
+    const screenDist = Math.hypot(dx, dy);
+    const screenR = Math.hypot(_edgeNdc.x - _hcNdc.x, _edgeNdc.y - _hcNdc.y);
+    const occluded = lpDist > hcDist && screenDist < screenR;
+    el.style.opacity = occluded ? '0' : '1';
+    el.style.pointerEvents = 'none';
+}
+
+function updateHeartOcclusion() {
+    // Asegura matrices de cámara al día para proyectar
+    camera.updateMatrixWorld();
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+
+    // Centro y radio del corazón proyectados a pantalla
+    _hcNdc.copy(HEART_CENTER).project(camera);
+    _right.setFromMatrixColumn(camera.matrixWorld, 0); // eje "derecha" de la cámara
+    _edgeNdc.copy(HEART_CENTER).add(_right.multiplyScalar(HEART_RADIUS)).project(camera);
+
+    phraseStars.forEach((star) => applyOcclusion(star.userData.labelEl, star.position));
+    photoLabels.forEach((p) => applyOcclusion(p.userData.el, p.position));
+}
+
 animate();
 
 // ============================================================
