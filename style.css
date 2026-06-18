@@ -24,6 +24,7 @@ html, body {
     position: relative;
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     background: radial-gradient(circle at center, #2a0f47 0%, #0a0418 60%, #000 100%);
 }
 
@@ -32,6 +33,18 @@ html, body {
     top: 0;
     left: 0;
     z-index: 1;
+}
+
+/* Viñeta cinematográfica */
+.vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+        transparent 45%,
+        rgba(10, 4, 24, 0.35) 80%,
+        rgba(5, 2, 14, 0.7) 100%);
 }
 
 /* ---------- Pantalla de entrada ---------- */
@@ -359,11 +372,41 @@ html, body {
     cursor: pointer;
 }
 
-@media (max-width: 600px) {
-    .header h1 { font-size: 3rem; }
-    .header p { font-size: 1.1rem; }
-    .photo-frame { width: 110px; height: 135px; }
-    .photo-frame img { height: 90px; }
-    .floating-label { font-size: 0.95rem; }
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    .header h1 { font-size: 3.2rem; }
+    .header p { font-size: 1.1rem; letter-spacing: 2px; }
+    .photo-frame { width: 120px; height: 148px; padding: 8px 8px 26px 8px; }
+    .photo-frame img { height: 100px; }
+    .photo-frame .caption { font-size: 0.85rem; }
+    .floating-label { font-size: 1rem; padding: 0.55rem 1rem; }
+    .gold-label { font-size: 0.85rem; }
     .ui-overlay { padding: 1.6rem; }
+    .instructions { padding: 0.8rem 1.3rem; }
+    .instructions p { font-size: 0.72rem; }
+    .intro-sub { font-size: 1.3rem; }
+    #modal-text { font-size: 1.2rem; }
+    #music-toggle { top: 1.4rem; right: 1.4rem; width: 46px; height: 46px; }
+}
+
+@media (max-width: 480px) {
+    .header h1 { font-size: 2.4rem; }
+    .header p { font-size: 0.95rem; }
+    .photo-frame { width: 98px; height: 122px; }
+    .photo-frame img { height: 80px; }
+    .floating-label { font-size: 0.9rem; }
+    .instructions p { font-size: 0.68rem; }
+    .modal-card { padding: 1rem; border-radius: 18px; }
+    .modal-photo img { max-height: 42vh; }
+}
+
+/* Pantallas que no soportan blur: fondo sólido para que se lea */
+@supports not (backdrop-filter: blur(10px)) {
+    .glass, .floating-label, #enter-btn { background: rgba(30, 12, 45, 0.85); }
+    .modal-backdrop { background: rgba(8, 3, 18, 0.92); }
+}
+
+/* Respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+    .intro-heart, .header h1 .beat, #music-toggle.playing .music-icon { animation: none; }
 }

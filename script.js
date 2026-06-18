@@ -53,16 +53,31 @@ const photos = [
 ];
 
 // ============================================================
+// 0. Detección de dispositivo (rendimiento + responsive)
+// ============================================================
+const isMobile = window.matchMedia('(max-width: 768px)').matches ||
+                 ('ontouchstart' in window && window.innerWidth < 900);
+const QUALITY = isMobile ? 0.5 : 1; // factor para densidad de partículas
+
+// FOV se ensancha en pantallas verticales para que todo quepa
+function fovForViewport() {
+    const aspect = window.innerWidth / window.innerHeight;
+    if (aspect < 0.7) return 92;
+    if (aspect < 1) return 82;
+    return 70;
+}
+
+// ============================================================
 // 1. Setup
 // ============================================================
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 3000);
+const camera = new THREE.PerspectiveCamera(fovForViewport(), window.innerWidth / window.innerHeight, 0.1, 3000);
 const renderer = new THREE.WebGLRenderer({
     canvas: document.querySelector('#universe-canvas'),
     antialias: true,
     alpha: true
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.85;
@@ -74,7 +89,7 @@ labelRenderer.domElement.style.top = '0px';
 labelRenderer.domElement.style.pointerEvents = 'none';
 document.getElementById('experience-container').appendChild(labelRenderer.domElement);
 
-camera.position.set(0, 90, 260);
+camera.position.set(0, 90, isMobile ? 320 : 260);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -117,7 +132,7 @@ texLoader.load('cosmic_nebula_background.png', (tex) => {
 
 // Campo de estrellas lejanas
 function createStarfield() {
-    const count = 6000;
+    const count = Math.round(6000 * QUALITY);
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const c = new THREE.Color();
@@ -151,7 +166,7 @@ const starfield = createStarfield();
 // ============================================================
 function createGalaxy() {
     const p = {
-        count: 55000, size: 0.2, radius: 130, branches: 5,
+        count: Math.round(55000 * QUALITY), size: 0.2, radius: 130, branches: 5,
         spin: 1.1, randomness: 0.35, randomnessPower: 3,
         insideColor: '#f7c9de', outsideColor: '#4a55c7'
     };
@@ -199,7 +214,7 @@ function heartPoint(t) {
 }
 
 function createHeart() {
-    const count = 9000;
+    const count = Math.round(9000 * QUALITY);
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const cInner = new THREE.Color('#fff0f6');
@@ -307,9 +322,9 @@ function createMemoryStars() {
         const starMesh = new THREE.Mesh(geo, mat);
         group.add(starMesh);
 
-        // Esfera invisible más grande para que sea fácil de clicar
+        // Esfera invisible más grande para que sea fácil de clicar/tocar
         const hit = new THREE.Mesh(
-            new THREE.SphereGeometry(9, 12, 12),
+            new THREE.SphereGeometry(isMobile ? 16 : 10, 12, 12),
             new THREE.MeshBasicMaterial({ visible: false })
         );
         hit.userData.memory = memory;
@@ -385,6 +400,53 @@ function spawnShootingStar() {
     scene.add(line);
     shootingStars.push(line);
 }
+
+// ============================================================
+// 8b. Corazones flotantes (bokeh romántico)
+// ============================================================
+function makeHeartTexture() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 28, 4, 32, 32, 30);
+    grad.addColorStop(0, 'rgba(255,235,245,1)');
+    grad.addColorStop(1, 'rgba(255,120,170,0.85)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(32, 56);
+    ctx.bezierCurveTo(2, 34, 12, 8, 32, 24);
+    ctx.bezierCurveTo(52, 8, 62, 34, 32, 56);
+    ctx.closePath();
+    ctx.fill();
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+}
+
+const floatHeartsCount = Math.round(45 * QUALITY);
+let floatingHearts;
+function createFloatingHearts() {
+    const positions = new Float32Array(floatHeartsCount * 3);
+    const speeds = new Float32Array(floatHeartsCount);
+    for (let i = 0; i < floatHeartsCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 320;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 200;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 320;
+        speeds[i] = 4 + Math.random() * 8;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+        size: 6, map: makeHeartTexture(), transparent: true,
+        opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending,
+        sizeAttenuation: true
+    });
+    const pts = new THREE.Points(geo, mat);
+    pts.userData.speeds = speeds;
+    scene.add(pts);
+    return pts;
+}
+floatingHearts = createFloatingHearts();
 
 // ============================================================
 // 9. Luz ambiente
@@ -463,24 +525,28 @@ window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMemory(
 // ============================================================
 // 11. Resize
 // ============================================================
-window.addEventListener('resize', () => {
+function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
+    camera.fov = fovForViewport();
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
-});
+}
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', onResize);
 
 // ============================================================
 // 12. Animación
 // ============================================================
 const clock = new THREE.Clock();
 let shootTimer = 0;
+let time = 0;
 
 function animate() {
     requestAnimationFrame(animate);
-    const time = clock.getElapsedTime();
-    const delta = clock.getDelta();
+    const delta = Math.min(clock.getDelta(), 0.05); // delta primero (clamp por si hay lag)
+    time += delta;
 
     galaxy.rotation.y = time * 0.04;
     starfield.rotation.y = time * 0.005;
@@ -493,7 +559,24 @@ function animate() {
     phraseStars.forEach((star, i) => {
         star.rotation.y = time * 0.5;
         star.position.y += Math.sin(time * 0.8 + star.userData.phase) * 0.04;
+        // Titileo suave de cada estrella
+        const tw = 0.82 + Math.sin(time * 3 + star.userData.phase) * 0.18;
+        if (star.children[0]) star.children[0].scale.setScalar(tw);
     });
+
+    // Corazones flotantes ascendiendo
+    const fhPos = floatingHearts.geometry.attributes.position;
+    const speeds = floatingHearts.userData.speeds;
+    for (let i = 0; i < speeds.length; i++) {
+        let y = fhPos.array[i * 3 + 1] + speeds[i] * delta;
+        if (y > 110) {
+            y = -110;
+            fhPos.array[i * 3] = (Math.random() - 0.5) * 320;
+            fhPos.array[i * 3 + 2] = (Math.random() - 0.5) * 320;
+        }
+        fhPos.array[i * 3 + 1] = y;
+    }
+    fhPos.needsUpdate = true;
 
     // Estrellas fugaces
     shootTimer -= delta;
