@@ -567,17 +567,6 @@ function animate() {
         // Titileo suave de cada estrella
         const tw = 0.88 + Math.sin(time * 3 + star.userData.phase) * 0.12;
         if (star.children[0]) star.children[0].scale.setScalar(tw);
-        // Solo las frases cercanas se ven nítidas → menos saturación visual
-        const d = camera.position.distanceTo(star.position);
-        const op = THREE.MathUtils.clamp(1 - (d - 70) / 90, 0, 1);
-        if (star.userData.labelEl) star.userData.labelEl.style.opacity = op.toFixed(2);
-    });
-
-    // Fotos: las lejanas se atenúan (sin desaparecer del todo)
-    photoLabels.forEach((p) => {
-        const d = camera.position.distanceTo(p.position);
-        const op = THREE.MathUtils.clamp(1 - (d - 120) / 160, 0.2, 1);
-        p.userData.el.style.opacity = op.toFixed(2);
     });
 
     // Corazones flotantes ascendiendo
