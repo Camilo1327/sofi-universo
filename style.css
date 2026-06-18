@@ -147,7 +147,7 @@ html, body {
     pointer-events: none;
     display: flex;
     flex-direction: column;
-    transition: transform 0.5s ease;
+    transition: transform 0.5s ease, opacity 0.6s ease;
 }
 
 .photo-frame img {

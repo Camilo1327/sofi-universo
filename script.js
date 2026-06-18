@@ -144,7 +144,7 @@ function createStarfield() {
         positions[i3] = r * Math.sin(phi) * Math.cos(theta);
         positions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
         positions[i3 + 2] = r * Math.cos(phi);
-        c.setHSL(0.6 + Math.random() * 0.15, 0.5, 0.7 + Math.random() * 0.3);
+        c.setHSL(0.6 + Math.random() * 0.12, 0.3, 0.7 + Math.random() * 0.3);
         colors[i3] = c.r; colors[i3 + 1] = c.g; colors[i3 + 2] = c.b;
     }
     const geo = new THREE.BufferGeometry();
@@ -168,7 +168,7 @@ function createGalaxy() {
     const p = {
         count: Math.round(55000 * QUALITY), size: 0.2, radius: 130, branches: 5,
         spin: 1.1, randomness: 0.35, randomnessPower: 3,
-        insideColor: '#f7c9de', outsideColor: '#4a55c7'
+        insideColor: '#f0cfdc', outsideColor: '#5a6ab0'
     };
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(p.count * 3);
@@ -299,6 +299,7 @@ function create3DStars() {
 
         group.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 30, Math.sin(angle) * radius);
         group.userData.phase = Math.random() * Math.PI * 2;
+        group.userData.labelEl = div;
         scene.add(group);
         phraseStars.push(group);
     });
@@ -341,6 +342,7 @@ function createMemoryStars() {
         group.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 35, Math.sin(angle) * radius);
         group.userData.phase = Math.random() * Math.PI * 2;
         group.userData.isMemory = true;
+        group.userData.labelEl = div;
         scene.add(group);
         phraseStars.push(group);
     });
@@ -350,6 +352,7 @@ createMemoryStars();
 // ============================================================
 // 7. Marcos de fotos
 // ============================================================
+const photoLabels = [];
 function createPhotoFrames() {
     photos.forEach((photo, i) => {
         const radius = 110 + Math.random() * 50;
@@ -368,7 +371,9 @@ function createPhotoFrames() {
 
         const photoLabel = new CSS2DObject(frameDiv);
         photoLabel.position.set(Math.cos(angle) * radius, 35 + (Math.random() - 0.5) * 30, Math.sin(angle) * radius);
+        photoLabel.userData.el = frameDiv;
         scene.add(photoLabel);
+        photoLabels.push(photoLabel);
     });
 }
 createPhotoFrames();
@@ -423,7 +428,7 @@ function makeHeartTexture() {
     return tex;
 }
 
-const floatHeartsCount = Math.round(45 * QUALITY);
+const floatHeartsCount = Math.round(22 * QUALITY);
 let floatingHearts;
 function createFloatingHearts() {
     const positions = new Float32Array(floatHeartsCount * 3);
@@ -437,8 +442,8 @@ function createFloatingHearts() {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     const mat = new THREE.PointsMaterial({
-        size: 6, map: makeHeartTexture(), transparent: true,
-        opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending,
+        size: 5, map: makeHeartTexture(), transparent: true,
+        opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending,
         sizeAttenuation: true
     });
     const pts = new THREE.Points(geo, mat);
@@ -560,8 +565,19 @@ function animate() {
         star.rotation.y = time * 0.5;
         star.position.y += Math.sin(time * 0.8 + star.userData.phase) * 0.04;
         // Titileo suave de cada estrella
-        const tw = 0.82 + Math.sin(time * 3 + star.userData.phase) * 0.18;
+        const tw = 0.88 + Math.sin(time * 3 + star.userData.phase) * 0.12;
         if (star.children[0]) star.children[0].scale.setScalar(tw);
+        // Solo las frases cercanas se ven nítidas → menos saturación visual
+        const d = camera.position.distanceTo(star.position);
+        const op = THREE.MathUtils.clamp(1 - (d - 70) / 90, 0, 1);
+        if (star.userData.labelEl) star.userData.labelEl.style.opacity = op.toFixed(2);
+    });
+
+    // Fotos: las lejanas se atenúan (sin desaparecer del todo)
+    photoLabels.forEach((p) => {
+        const d = camera.position.distanceTo(p.position);
+        const op = THREE.MathUtils.clamp(1 - (d - 120) / 160, 0.2, 1);
+        p.userData.el.style.opacity = op.toFixed(2);
     });
 
     // Corazones flotantes ascendiendo
