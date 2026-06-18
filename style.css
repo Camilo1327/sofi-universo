@@ -86,8 +86,19 @@ html, body {
     font-style: italic;
     font-size: 1.6rem;
     letter-spacing: 2px;
-    margin: 1.2rem 0 2.4rem;
+    margin: 1.2rem 0 1.4rem;
     opacity: 0.85;
+}
+
+.intro-note {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    color: #ffd1e4;
+    margin: 0 auto 2.4rem;
+    max-width: 30ch;
+    text-shadow: 0 0 14px rgba(255, 77, 148, 0.35);
 }
 
 #enter-btn {
@@ -406,7 +417,8 @@ html, body {
     .modal-card { padding: 1rem; border-radius: 18px; }
     .modal-photo img { max-height: 42vh; }
     .intro-heart { font-size: 3rem; }
-    .intro-sub { font-size: 1.15rem; margin: 1rem 0 1.8rem; }
+    .intro-sub { font-size: 1.15rem; margin: 1rem 0 1rem; }
+    .intro-note { font-size: 1.05rem; margin-bottom: 1.8rem; }
     #enter-btn { padding: 0.85rem 2rem; font-size: 0.78rem; }
 }
 

@@ -6,55 +6,64 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 const phrases = [
+    "Eres la mujer de mi vida 💘",
     "Sofi, eres mi sol ☀️",
-    "Cada latido es para ti 💘",
+    "Cada latido es para ti ❤️",
     "Contigo hasta el infinito ♾️",
     "Mi galaxia favorita eres tú 🌌",
     "Eres la luz de mi vida ✨",
-    "Mi universo entero 🪐",
-    "Tú y yo, siempre ❤️",
-    "Sofi, mi amor eterno 💘",
+    "Naciste para mí 💍",
+    "Tú y yo, siempre 💞",
+    "Mi amor eterno eres tú 💘",
     "Eres mi lugar favorito 🏡",
     "Mi paz y mi locura 🌙",
     "Gracias por existir 🌷",
     "Tú lo tienes todo 🎶",
-    "Mi hogar eres tú 💫",
-    "Naciste para mí 💍"
+    "Mi hogar eres tú 💫"
 ];
 
-// Estrellas doradas especiales: al hacer clic abren un recuerdo
+// La mayoría como estrellas doradas: al hacer clic abren un recuerdo 💘
 const memories = [
     {
-        image: "WhatsApp Image 2026-06-18 at 3.28.11 PM.jpeg",
-        text: "Desde el primer momento supe que tú eras diferente. Mi corazón te eligió sin dudar."
-    },
-    {
         image: "WhatsApp Image 2026-06-18 at 3.28.12 PM.jpeg",
-        text: "Tu sonrisa es la estrella más brillante de todo mi universo. ✨"
+        text: "Nuestro primer viaje juntos… fue de los mejores fines de semana de mi vida. 💘"
     },
     {
-        image: "WhatsApp Image 2026-06-18 at 3.28.13 PM.jpeg",
-        text: "Cada día contigo es mi parte favorita de estar vivo."
+        image: "WhatsApp Image 2026-06-18 at 3.28.12 PM (1).jpeg",
+        text: "Tu sonrisa es el amanecer que le da sentido a todos mis días."
+    },
+    {
+        image: "WhatsApp Image 2026-06-18 at 3.28.12 PM (2).jpeg",
+        text: "De todas las estrellas del cielo, a ti te elegiría mil veces, en mil universos. ✨"
+    },
+    {
+        image: "WhatsApp Image 2026-06-18 at 3.28.14 PM.jpeg",
+        text: "Cómo olvidar la primera vez que nos vimos… tú estabas tan bonita y yo tan nervioso. 💘"
     },
     {
         image: "WhatsApp Image 2026-06-18 at 3.30.10 PM.jpeg",
-        text: "Contigo quiero todos mis para siempre. Te amo, Sofi. 💘"
+        text: "Contigo aprendí que el amor no se explica, se siente. Y yo lo siento todo por ti."
+    },
+    {
+        image: "WhatsApp Image 2026-06-18 at 4.09.37 PM (1).jpeg",
+        text: "Si volviera a nacer, te buscaría en cada vida solo para volver a encontrarte. 🌙"
+    },
+    {
+        image: "WhatsApp Image 2026-06-18 at 4.09.38 PM (1).jpeg",
+        text: "Eres lo más bonito que me ha pasado. Mi presente y mi para siempre. 💫"
+    },
+    {
+        image: "WhatsApp Image 2026-06-18 at 4.09.38 PM (2).jpeg",
+        text: "Te amo más de lo que las palabras y las estrellas alcanzan a decir, Sofi. 💘"
     }
 ];
 
+// Pocas fotos como marcos flotantes (para no saturar afuera)
 const photos = [
     { file: "WhatsApp Image 2026-06-18 at 3.28.11 PM.jpeg", caption: "nuestro comienzo" },
-    { file: "WhatsApp Image 2026-06-18 at 3.28.12 PM.jpeg", caption: "tu sonrisa" },
-    { file: "WhatsApp Image 2026-06-18 at 3.28.12 PM (1).jpeg", caption: "aquel día" },
-    { file: "WhatsApp Image 2026-06-18 at 3.28.12 PM (2).jpeg", caption: "contigo" },
     { file: "WhatsApp Image 2026-06-18 at 3.28.13 PM.jpeg", caption: "mi favorita" },
-    { file: "WhatsApp Image 2026-06-18 at 3.28.14 PM.jpeg", caption: "siempre tú" },
-    { file: "WhatsApp Image 2026-06-18 at 3.30.10 PM.jpeg", caption: "nuestro mundo" },
     { file: "WhatsApp Image 2026-06-18 at 4.09.37 PM.jpeg", caption: "tú y yo" },
-    { file: "WhatsApp Image 2026-06-18 at 4.09.37 PM (1).jpeg", caption: "mi cielo" },
     { file: "WhatsApp Image 2026-06-18 at 4.09.38 PM.jpeg", caption: "felicidad" },
-    { file: "WhatsApp Image 2026-06-18 at 4.09.38 PM (1).jpeg", caption: "mi todo" },
-    { file: "WhatsApp Image 2026-06-18 at 4.09.38 PM (2).jpeg", caption: "juntos" },
     { file: "WhatsApp Image 2026-06-18 at 4.09.39 PM.jpeg", caption: "por siempre" }
 ];
 
