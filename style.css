@@ -199,7 +199,11 @@ html, body {
 
 .header {
     text-align: center;
-    animation: fadeInDown 2s ease-out 0.4s backwards;
+    opacity: 0;
+}
+
+body.entered .header {
+    animation: fadeInDown 1.8s ease-out 1.8s forwards;
 }
 
 @keyframes fadeInDown {
@@ -248,7 +252,11 @@ html, body {
 .instructions {
     align-self: center;
     padding: 0.9rem 2rem;
-    animation: fadeInUp 2.5s ease-out 0.8s backwards;
+    opacity: 0;
+}
+
+body.entered .instructions {
+    animation: fadeInUp 2s ease-out 2.6s forwards;
 }
 
 .glass {
@@ -283,6 +291,13 @@ html, body {
     justify-content: center;
     font-size: 1.4rem;
     transition: all 0.4s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.entered #music-toggle {
+    animation: fadeInDown 1.5s ease-out 3.2s forwards;
+    pointer-events: auto;
 }
 
 #music-toggle:hover {

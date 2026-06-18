@@ -115,6 +115,20 @@ controls.minDistance = 40;
 controls.maxDistance = 600;
 controls.enablePan = false;
 
+// ---- Animación de entrada (vuelo de cámara + corazón floreciendo) ----
+const camIntroStart = new THREE.Vector3(0, 300, 780);
+const camIntroEnd = new THREE.Vector3(0, 90, isMobile ? 320 : 260);
+const INTRO_DUR = 3.6;
+let introT = null;   // null = sin animar
+let heartGrow = 1;   // 0→1 durante la entrada
+
+function startIntroAnimation() {
+    controls.autoRotate = false;
+    camera.position.copy(camIntroStart);
+    heartGrow = 0;
+    introT = 0;
+}
+
 // ============================================================
 // 2. Post-processing (Bloom = el brillo cinematográfico)
 // ============================================================
@@ -604,6 +618,16 @@ function animate() {
     const delta = Math.min(clock.getDelta(), 0.05); // delta primero (clamp por si hay lag)
     time += delta;
 
+    // Animación de entrada: vuelo de cámara con easing
+    if (introT !== null) {
+        introT += delta;
+        const k = Math.min(introT / INTRO_DUR, 1);
+        const e = 1 - Math.pow(1 - k, 3); // easeOutCubic
+        camera.position.lerpVectors(camIntroStart, camIntroEnd, e);
+        heartGrow = e;
+        if (k >= 1) { introT = null; heartGrow = 1; controls.autoRotate = true; }
+    }
+
     galaxy.rotation.y = time * 0.04;
     starfield.rotation.y = time * 0.005;
     galaxyRings.rotation.y = -time * 0.025;
@@ -611,7 +635,7 @@ function animate() {
 
     // Latido del corazón
     const beat = 1 + Math.sin(time * 2.2) * 0.06 + Math.sin(time * 4.4) * 0.02;
-    heart.scale.set(beat, beat, beat);
+    heart.scale.setScalar(beat * heartGrow);
     // Siempre de frente a la cámara (billboard), con un leve balanceo
     heart.quaternion.copy(camera.quaternion);
     heart.rotateZ(Math.sin(time * 0.5) * 0.08);
@@ -717,8 +741,13 @@ const enterBtn = document.getElementById('enter-btn');
 const music = document.getElementById('bg-music');
 const musicToggle = document.getElementById('music-toggle');
 
+let entered = false;
 enterBtn.addEventListener('click', () => {
+    if (entered) return;
+    entered = true;
     intro.classList.add('hidden');
+    document.body.classList.add('entered'); // dispara el fade-in de la interfaz
+    startIntroAnimation();                   // vuelo de cámara + corazón floreciendo
     music.volume = 0.55;
     music.play().then(() => {
         musicToggle.classList.add('playing');
