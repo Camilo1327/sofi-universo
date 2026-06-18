@@ -1,0 +1,369 @@
+:root {
+    --accent: #ff4d94;
+    --accent-soft: #ffb3d9;
+    --gold: #ffd700;
+    --glass: rgba(255, 255, 255, 0.04);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+}
+
+#experience-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background: radial-gradient(circle at center, #2a0f47 0%, #0a0418 60%, #000 100%);
+}
+
+#universe-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* ---------- Pantalla de entrada ---------- */
+#intro-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #2a0f47 0%, #000 100%);
+    transition: opacity 1.2s ease, visibility 1.2s ease;
+}
+
+#intro-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.intro-inner {
+    text-align: center;
+    animation: fadeInUp 1.6s ease-out;
+}
+
+.intro-heart {
+    font-size: 4rem;
+    display: inline-block;
+    animation: beat 1.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 30px rgba(255, 77, 148, 0.7));
+}
+
+.intro-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    margin: 1.2rem 0 2.4rem;
+    opacity: 0.85;
+}
+
+#enter-btn {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #fff;
+    padding: 1rem 2.6rem;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 179, 217, 0.5);
+    background: rgba(255, 77, 148, 0.08);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: all 0.4s ease;
+}
+
+#enter-btn:hover {
+    background: rgba(255, 77, 148, 0.25);
+    box-shadow: 0 0 40px rgba(255, 77, 148, 0.5);
+    transform: translateY(-2px);
+}
+
+/* ---------- Etiquetas 3D ---------- */
+.floating-label {
+    color: white;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    background: rgba(20, 5, 30, 0.35);
+    backdrop-filter: blur(8px);
+    padding: 0.7rem 1.3rem;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 179, 217, 0.25);
+    font-size: 1.15rem;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: all 0.4s ease;
+    box-shadow: 0 0 18px rgba(255, 77, 148, 0.08);
+    text-shadow: 0 0 6px rgba(255, 179, 217, 0.35);
+}
+
+.gold-label {
+    color: #ffe9a8;
+    border-color: rgba(255, 215, 0, 0.4);
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 22px rgba(255, 215, 0, 0.15);
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+}
+
+/* ---------- Marcos de foto ---------- */
+.photo-frame {
+    width: 160px;
+    height: 195px;
+    background: #fffdf7;
+    padding: 11px 11px 34px 11px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.6), 0 0 30px rgba(255, 179, 217, 0.25);
+    transform: rotate(-2deg);
+    border-radius: 3px;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.5s ease;
+}
+
+.photo-frame img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    background: #efe6f5;
+}
+
+.photo-frame .caption {
+    color: #b03a6e;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    text-align: center;
+    margin-top: 6px;
+}
+
+/* ---------- UI Overlay ---------- */
+.ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2.8rem;
+}
+
+.header {
+    text-align: center;
+    animation: fadeInDown 2s ease-out 0.4s backwards;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-25px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(25px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes beat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.25); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.18); }
+}
+
+.header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem;
+    font-weight: 700;
+    background: linear-gradient(to bottom, #ffffff, #ffb3d9, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 18px rgba(255, 77, 148, 0.35));
+}
+
+.header h1 .beat {
+    display: inline-block;
+    -webkit-text-fill-color: initial;
+    animation: beat 1.4s ease-in-out infinite;
+}
+
+.header p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    letter-spacing: 4px;
+    opacity: 0.85;
+    margin-top: 2px;
+}
+
+.instructions {
+    align-self: center;
+    padding: 0.9rem 2rem;
+    animation: fadeInUp 2.5s ease-out 0.8s backwards;
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 100px;
+    text-align: center;
+}
+
+.instructions p {
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 1px;
+    opacity: 0.75;
+}
+
+/* ---------- Botón de música ---------- */
+#music-toggle {
+    position: absolute;
+    top: 2.2rem;
+    right: 2.2rem;
+    z-index: 20;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    transition: all 0.4s ease;
+}
+
+#music-toggle:hover {
+    box-shadow: 0 0 30px rgba(255, 77, 148, 0.5);
+    transform: scale(1.08);
+}
+
+#music-toggle.playing .music-icon {
+    animation: spin 4s linear infinite;
+    color: var(--accent-soft);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Pop-up de recuerdo ---------- */
+#memory-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#memory-modal.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(42, 15, 71, 0.55), rgba(0, 0, 0, 0.8));
+    backdrop-filter: blur(6px);
+}
+
+.modal-card {
+    position: relative;
+    z-index: 1;
+    width: min(90vw, 420px);
+    background: linear-gradient(160deg, rgba(40, 18, 56, 0.95), rgba(20, 8, 30, 0.97));
+    border: 1px solid rgba(255, 179, 217, 0.3);
+    border-radius: 22px;
+    padding: 1.4rem;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(255, 77, 148, 0.18);
+    transform: translateY(20px) scale(0.96);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+}
+
+#memory-modal.open .modal-card {
+    transform: translateY(0) scale(1);
+}
+
+.modal-photo {
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-photo img {
+    width: 100%;
+    max-height: 50vh;
+    object-fit: cover;
+    display: block;
+}
+
+#modal-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    line-height: 1.5;
+    color: #ffe9f2;
+    margin-top: 1.2rem;
+    text-shadow: 0 0 10px rgba(255, 179, 217, 0.3);
+}
+
+#modal-close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.9rem;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.3s, transform 0.3s;
+}
+
+#modal-close:hover {
+    color: var(--accent-soft);
+    transform: scale(1.15);
+}
+
+#universe-canvas.hoverable {
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .header h1 { font-size: 3rem; }
+    .header p { font-size: 1.1rem; }
+    .photo-frame { width: 110px; height: 135px; }
+    .photo-frame img { height: 90px; }
+    .floating-label { font-size: 0.95rem; }
+    .ui-overlay { padding: 1.6rem; }
+}
