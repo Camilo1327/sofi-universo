@@ -123,6 +123,36 @@ html, body {
     transform: translateY(-2px);
 }
 
+#enter-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+    letter-spacing: 2px;
+}
+
+/* Lluvia de corazones al hacer clic */
+#heart-bursts {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.burst-heart {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    animation: burstUp 1.1s ease-out forwards;
+    filter: drop-shadow(0 0 8px rgba(255, 77, 148, 0.5));
+}
+
+@keyframes burstUp {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1); }
+}
+
 /* ---------- Etiquetas 3D ---------- */
 .floating-label {
     color: white;

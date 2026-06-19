@@ -535,8 +535,6 @@ window.addEventListener('mousemove', (e) => {
 });
 
 // ---- Clic en estrellas doradas → pop-up ----
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
 const canvas = renderer.domElement;
 const modal = document.getElementById('memory-modal');
 const modalImg = document.getElementById('modal-img');
@@ -544,16 +542,26 @@ const modalText = document.getElementById('modal-text');
 
 let downPos = null;
 
-function setPointer(e) {
-    const t = e.touches ? e.touches[0] : e;
-    pointer.x = (t.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(t.clientY / window.innerHeight) * 2 + 1;
-}
-
-function intersectMemory() {
-    raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(clickableStars, false);
-    return hits.length ? hits[0].object.userData.memory : null;
+// Selección por cercanía en pantalla: elige la estrella dorada más próxima
+// al punto tocado (dentro de un radio en píxeles). Mucho más tolerante que el rayo.
+const _camDir = new THREE.Vector3();
+const _toStar = new THREE.Vector3();
+const _proj = new THREE.Vector3();
+function pickMemoryAt(cx, cy) {
+    camera.getWorldDirection(_camDir);
+    const tol = isMobile ? 70 : 52; // radio de selección en px
+    let best = null, bestScore = Infinity;
+    for (const hit of clickableStars) {
+        hit.getWorldPosition(_proj);
+        _toStar.subVectors(_proj, camera.position);
+        if (_toStar.dot(_camDir) <= 0) continue; // está detrás de la cámara
+        _proj.project(camera);
+        const sx = (_proj.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (-_proj.y * 0.5 + 0.5) * window.innerHeight;
+        const d = Math.hypot(sx - cx, sy - cy);
+        if (d < tol && d < bestScore) { bestScore = d; best = hit; }
+    }
+    return best;
 }
 
 canvas.addEventListener('pointerdown', (e) => {
@@ -564,33 +572,107 @@ canvas.addEventListener('pointerup', (e) => {
     if (!downPos) return;
     const dist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
     downPos = null;
-    if (dist > 6) return; // fue un arrastre, no un clic
-    setPointer(e);
-    const memory = intersectMemory();
-    if (memory) openMemory(memory);
+    // Umbral de arrastre más amplio en táctil (el dedo se mueve un poco)
+    const dragTol = e.pointerType === 'touch' ? 16 : 8;
+    if (dist > dragTol) return; // fue un arrastre, no un clic
+    if (camTween.active) return; // ignora toques durante un vuelo
+    spawnHeartBurst(e.clientX, e.clientY); // ✨ lluvia de corazones
+    const hit = pickMemoryAt(e.clientX, e.clientY);
+    if (hit) flyToMemory(hit);
 });
 
 // Cursor cuando se pasa sobre una estrella dorada
 canvas.addEventListener('mousemove', (e) => {
-    setPointer(e);
-    canvas.classList.toggle('hoverable', !!intersectMemory());
+    canvas.classList.toggle('hoverable', !!pickMemoryAt(e.clientX, e.clientY));
 });
+
+// ---- Vuelo de cámara suave (tween) ----
+const camTween = {
+    active: false, t: 0, dur: 1.5,
+    fromPos: new THREE.Vector3(), toPos: new THREE.Vector3(),
+    fromTar: new THREE.Vector3(), toTar: new THREE.Vector3(),
+    onDone: null
+};
+function flyCameraTo(toPos, toTar, dur, onDone) {
+    camTween.fromPos.copy(camera.position);
+    camTween.toPos.copy(toPos);
+    camTween.fromTar.copy(controls.target);
+    camTween.toTar.copy(toTar);
+    camTween.t = 0;
+    camTween.dur = dur;
+    camTween.onDone = onDone || null;
+    camTween.active = true;
+    controls.autoRotate = false;
+}
+
+function flyToMemory(hit) {
+    const starPos = hit.getWorldPosition(new THREE.Vector3());
+    const dir = new THREE.Vector3().subVectors(camera.position, starPos).normalize();
+    const camTo = starPos.clone().add(dir.multiplyScalar(52)).add(new THREE.Vector3(0, 8, 0));
+    flyCameraTo(camTo, starPos, 1.5, () => openMemory(hit.userData.memory));
+}
 
 function openMemory(memory) {
     modalImg.src = memory.image;
     modalText.textContent = memory.text;
     modal.classList.add('open');
-    controls.autoRotate = false;
+    playChime();
 }
 
 function closeMemory() {
+    if (!modal.classList.contains('open')) return;
     modal.classList.remove('open');
-    controls.autoRotate = true;
+    // Regresa volando a la vista general
+    flyCameraTo(camIntroEnd, new THREE.Vector3(0, 0, 0), 1.4, () => { controls.autoRotate = true; });
 }
 
 document.getElementById('modal-close').addEventListener('click', closeMemory);
 modal.querySelector('.modal-backdrop').addEventListener('click', closeMemory);
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMemory(); });
+
+// ---- ✨ Lluvia de corazones ----
+const burstLayer = document.getElementById('heart-bursts');
+const burstEmojis = ['💘', '💖', '💕', '❤️', '💗'];
+function spawnHeartBurst(x, y) {
+    const n = 5 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < n; i++) {
+        const s = document.createElement('span');
+        s.className = 'burst-heart';
+        s.textContent = burstEmojis[Math.floor(Math.random() * burstEmojis.length)];
+        s.style.left = x + 'px';
+        s.style.top = y + 'px';
+        s.style.fontSize = (0.9 + Math.random() * 1.1) + 'rem';
+        s.style.setProperty('--dx', (Math.random() - 0.5) * 120 + 'px');
+        s.style.setProperty('--dy', -(70 + Math.random() * 90) + 'px');
+        s.style.animationDelay = (Math.random() * 0.12) + 's';
+        burstLayer.appendChild(s);
+        setTimeout(() => s.remove(), 1300);
+    }
+}
+
+// ---- 🔔 Sonido suave al abrir un recuerdo (sintetizado, sin archivos) ----
+let audioCtx = null;
+function playChime() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const notes = [880, 1318.5]; // La5 + Mi6, un "tin" dulce
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            const start = now + i * 0.08;
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.2);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(start);
+            osc.stop(start + 1.25);
+        });
+    } catch (e) { /* navegador sin WebAudio */ }
+}
 
 // ============================================================
 // 11. Resize
@@ -626,6 +708,19 @@ function animate() {
         camera.position.lerpVectors(camIntroStart, camIntroEnd, e);
         heartGrow = e;
         if (k >= 1) { introT = null; heartGrow = 1; controls.autoRotate = true; }
+    }
+
+    // Vuelo de cámara hacia un recuerdo / de regreso
+    if (camTween.active) {
+        camTween.t += delta;
+        const k = Math.min(camTween.t / camTween.dur, 1);
+        const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; // easeInOutCubic
+        camera.position.lerpVectors(camTween.fromPos, camTween.toPos, e);
+        controls.target.lerpVectors(camTween.fromTar, camTween.toTar, e);
+        if (k >= 1) {
+            camTween.active = false;
+            if (camTween.onDone) { const fn = camTween.onDone; camTween.onDone = null; fn(); }
+        }
     }
 
     galaxy.rotation.y = time * 0.04;
@@ -682,9 +777,11 @@ function animate() {
         }
     }
 
-    // Parallax suave: el universo reacciona al mouse
-    controls.target.x += (mouse.x * 12 - controls.target.x) * 0.02;
-    controls.target.y += (-mouse.y * 8 - controls.target.y) * 0.02;
+    // Parallax suave: el universo reacciona al mouse (no durante vuelos)
+    if (introT === null && !camTween.active) {
+        controls.target.x += (mouse.x * 12 - controls.target.x) * 0.02;
+        controls.target.y += (-mouse.y * 8 - controls.target.y) * 0.02;
+    }
 
     controls.update();
 
@@ -740,6 +837,31 @@ const intro = document.getElementById('intro-screen');
 const enterBtn = document.getElementById('enter-btn');
 const music = document.getElementById('bg-music');
 const musicToggle = document.getElementById('music-toggle');
+
+// ---- Pantalla de carga: precargar todas las imágenes ----
+const enterLabel = enterBtn.textContent;
+enterBtn.disabled = true;
+enterBtn.textContent = 'Preparando el universo…';
+
+function preloadImages(urls) {
+    return Promise.all(urls.map((u) => new Promise((res) => {
+        const im = new Image();
+        im.onload = im.onerror = () => res();
+        im.src = u;
+    })));
+}
+const allImageUrls = [
+    'cosmic_nebula_background.png',
+    ...photos.map((p) => p.file),
+    ...memories.map((m) => m.image)
+];
+function markReady() {
+    enterBtn.disabled = false;
+    enterBtn.textContent = enterLabel;
+}
+// Habilita al terminar la precarga, con tope de 8s por si algo tarda
+preloadImages(allImageUrls).then(markReady);
+setTimeout(markReady, 8000);
 
 let entered = false;
 enterBtn.addEventListener('click', () => {
